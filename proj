@@ -1,0 +1,59 @@
+#!/usr/bin/python3
+
+import json
+import sys
+import os
+
+if __name__ == "__main__":
+   argv = sys.argv[1:]
+
+   if len(argv) == 0:
+      print("Expected operation")
+      exit(1)
+
+   home = os.environ.get('HOME')
+   if not home:
+      print("ERROR: $HOME not set")
+      exit(-1)
+
+   projects = {}
+   try:
+      with open(f"{home}/.config/proj/projects.json", "r") as fp:
+         projects = json.load(fp)
+      print("INFO: loaded projects db")
+   except FileNotFoundError:
+      print("WARN: Could not find projects db")
+   except JSONDecodeError:
+      print("ERROR: Malformed projects db, exiting")
+      exit(-1)
+
+   if argv[0] == "add":
+      projects[argv[1]] = {"path": argv[2]}
+      
+      try:
+         with open(f"{home}/.config/proj/projects.json", "w") as fp:
+            json.dump(projects, fp, sort_keys=True)
+         print("Added project")
+      except FileNotFoundError:
+         print("WARN: Could not save projects db")
+
+      exit(0)
+
+   if argv[0] == "list":
+      for k,v in projects.items():
+         print(f"{k}:{(20-len(k))*' '} -> {v['path']}")
+
+      exit(0)
+      
+   else:
+      if argv[0] in projects.keys():
+         print(f"Opening '{projects[argv[0]]}'")
+      else:
+         print("Could not find project")
+
+         
+
+
+
+
+   
