@@ -45,6 +45,23 @@ if __name__ == "__main__":
          print(f"{k}:{(20-len(k))*' '} -> {v['path']}")
 
       exit(0)
+
+   if argv[0] == "rm":
+      
+      name = argv[1]
+      
+      if name in projects.keys():
+         projects.pop(name)
+      
+         try:
+            with open(f"{home}/.config/proj/projects.json", "w") as fp:
+               json.dump(projects, fp, sort_keys=True)
+            print("Removed project")
+         except FileNotFoundError:
+            print("WARN: Could not save projects db")
+            
+      else:
+         print("Project not in db")
       
    else:
       if argv[0] in projects.keys():
