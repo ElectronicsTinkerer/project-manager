@@ -3,6 +3,7 @@
 import json
 import sys
 import os
+import subprocess
 
 if __name__ == "__main__":
    argv = sys.argv[1:]
@@ -47,7 +48,16 @@ if __name__ == "__main__":
       
    else:
       if argv[0] in projects.keys():
-         print(f"Opening '{projects[argv[0]]}'")
+         p = projects.get(argv[0])
+         name = argv[0]
+         path = p.get('path')
+         print(f"Opening '{name}' @ '{path}'")
+         subprocess.call([
+            "/usr/bin/gnome-terminal",
+            "--title", name,
+            "--working-directory", path,
+            "--tab"
+         ], shell=False)
       else:
          print("Could not find project")
 
