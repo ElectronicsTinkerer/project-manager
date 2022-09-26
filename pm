@@ -19,17 +19,32 @@ if __name__ == "__main__":
 
    home = f"{home}/.config/proj/projects.json"
       
+   db = {}
    projects = {}
    try:
       with open(home, "r") as fp:
-         projects = json.load(fp)
+         db = json.load(fp)
       print("INFO: loaded projects db")
    except FileNotFoundError:
       print("WARN: Could not find projects db")
-   except JSONDecodeError:
+      db = {'pm_ver': 0, 'projects': {}}
+      try:
+         with open(home, "w") as fp:
+            json.dump(db, fp, sort_keys=True)
+         print("Added project")
+      except FileNotFoundError:
+         print("WARN: Could not save projects db")
+   except json.decoder.JSONDecodeError:
       print("ERROR: Malformed projects db, exiting")
       exit(-1)
-
+      
+   projects = db.get('projects')
+   if projects == None:
+      print("WARN: projects dict missing")
+      print(projects)
+      projects = {}
+      db['projects'] = projects
+         
    if argv[0] == "add":
 
       name = argv[1]
@@ -41,7 +56,7 @@ if __name__ == "__main__":
       
          try:
             with open(home, "w") as fp:
-               json.dump(projects, fp, sort_keys=True)
+               json.dump(db, fp, sort_keys=True)
             print("Added project")
          except FileNotFoundError:
             print("WARN: Could not save projects db")
@@ -63,7 +78,7 @@ if __name__ == "__main__":
       
          try:
             with open(home, "w") as fp:
-               json.dump(projects, fp, sort_keys=True)
+               json.dump(db, fp, sort_keys=True)
             print("Removed project")
          except FileNotFoundError:
             print("WARN: Could not save projects db")
@@ -84,7 +99,7 @@ if __name__ == "__main__":
       
          try:
             with open(home, "w") as fp:
-               json.dump(projects, fp, sort_keys=True)
+               json.dump(db, fp, sort_keys=True)
             print("Updated project")
          except FileNotFoundError:
             print("WARN: Could not save projects db")
@@ -106,7 +121,7 @@ if __name__ == "__main__":
       
          try:
             with open(home, "w") as fp:
-               json.dump(projects, fp, sort_keys=True)
+               json.dump(db, fp, sort_keys=True)
             print("Renamed project")
          except FileNotFoundError:
             print("WARN: Could not save projects db")
