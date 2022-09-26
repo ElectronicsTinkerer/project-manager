@@ -74,17 +74,40 @@ if __name__ == "__main__":
       exit(0)
 
 
-   elif argv[0] == "update":
+   elif argv[0] == "chdir":
       
       name = argv[1]
+      path = argv[2]
       
       if name in projects.keys():
-         projects[name] = {"path": argv[2]}
+         projects[name]["path"] = path
       
          try:
             with open(home, "w") as fp:
                json.dump(projects, fp, sort_keys=True)
             print("Updated project")
+         except FileNotFoundError:
+            print("WARN: Could not save projects db")
+            
+      else:
+         print("Project not in db")
+
+      exit(0)
+
+   elif argv[0] == "rename":
+      
+      old_name = argv[1]
+      new_name = argv[2]
+      
+      if old_name in projects.keys():
+         proj_data = projects[old_name]
+         projects.pop(old_name)
+         projects[new_name] = proj_data
+      
+         try:
+            with open(home, "w") as fp:
+               json.dump(projects, fp, sort_keys=True)
+            print("Renamed project")
          except FileNotFoundError:
             print("WARN: Could not save projects db")
             
