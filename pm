@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
       exit(0)
 
-   elif argv[0] == "list":
+   elif argv[0] == "ls":
       for k,v in projects.items():
          print(f"{k}:{(20-len(k))*' '} -> {v['path']}")
 
