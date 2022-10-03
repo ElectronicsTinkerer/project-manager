@@ -4,6 +4,7 @@ import json
 import sys
 import os
 import subprocess
+import re
 
 if __name__ == "__main__":
    argv = sys.argv[1:]
@@ -137,12 +138,21 @@ if __name__ == "__main__":
          name = argv[0]
          path = p.get('path')
          print(f"Opening '{name}' @ '{path}'")
+         # subprocess.call([
+         #    "/usr/bin/gnome-terminal",
+         #    "--title", name,
+         #    "--working-directory", path,
+         #    "--tab"
+         # ], shell=False)
+         # path = re.sub("/mnt/c", "C:", path)
          subprocess.call([
-            "/usr/bin/gnome-terminal",
+            "wt.exe",
+            "new-tab",
             "--title", name,
-            "--working-directory", path,
-            "--tab"
+            "--startingDirectory", path,
+            "wsl"
          ], shell=False)
+
       else:
          print("Could not find project")
 
