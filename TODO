@@ -1,0 +1,11 @@
+# Project Manager TODO
+
+* Add config option to specify terminal emulator
+* Figure out tab completion of projects
+
+
+# TO-DOne
+
+* Move sub commands into a dict and call by key
+* Add help menu
+
