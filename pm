@@ -6,6 +6,7 @@ import os
 import subprocess
 import re
 
+CUR_PM_VERS = 1
 
 def pm_add(conf_path, db, args):
 
@@ -158,7 +159,7 @@ if __name__ == "__main__":
       print("INFO: loaded projects db")
    except FileNotFoundError:
       print("WARN: Unable to find projects db")
-      db = {'pm_ver': 0, 'projects': {}}
+      db = {'pm_ver': CUR_PM_VERS, 'term': [], 'projects': {}}
       try:
          with open(conf_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
@@ -167,13 +168,16 @@ if __name__ == "__main__":
          print("WARN: Unable to save projects db")
    except json.decoder.JSONDecodeError:
       print("ERROR: Malformed projects db, exiting")
-      printf("DEBUG: db location: '{conf_path}'")
+      print(f"DEBUG: db location: '{conf_path}'")
       exit(-1)
       
    if db.get('projects') == None:
       print("WARN: projects dict missing")
       print(projects)
       db['projects'] = {}
+
+   if CUR_PM_VERS != db.get('pm_ver'):
+      print("WARN: Using project config from older PM version")
          
    if argv[0] in SUBCMDS:
       subargs = argv[1:]
@@ -185,26 +189,32 @@ if __name__ == "__main__":
       exit(0)
          
    else:
+      term = db.get('term')
       projects = db.get('projects')
       if argv[0] in projects.keys():
          p = projects.get(argv[0])
          name = argv[0]
          path = p.get('path')
-         print(f"Opening '{name}' @ '{path}'")
-         # subprocess.call([
-         #    "/usr/bin/gnome-terminal",
-         #    "--title", name,
-         #    "--working-directory", path,
-         #    "--tab"
-         # ], shell=False)
-         # path = re.sub("/mnt/c", "C:", path)
-         subprocess.call([
-            "wt.exe",
-            "new-tab",
-            "--title", name,
-            "--startingDirectory", path,
-            "wsl"
-         ], shell=False)
+         if not term:
+            print("ERROR: terminal setting missing from config")
+         else:
+            print(f"Opening '{name}' @ '{path}'")
+            subproc = []
+            for t in term:
+               if t == "TNAME":
+                  subproc.append(name)
+               elif t == "TWD":
+                  subproc.append(path)
+               else:
+                  subproc.append(t)
+
+            if len(subproc) > 0:
+               try:
+                  subprocess.call(subproc, shell=False)
+               except FileNotFoundError:
+                  print("ERROR: unable to start terminal - command not found")
+            else:
+               print("ERROR: Missing value for terminal in config")
 
       else:
          print("Unable to find project")

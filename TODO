@@ -1,11 +1,11 @@
 # Project Manager TODO
 
-* Add config option to specify terminal emulator
 * Figure out tab completion of projects
-
+* Move project db to separate file from config; add db location to config
 
 # TO-DOne
 
 * Move sub commands into a dict and call by key
 * Add help menu
+* Add config option to specify terminal emulator
 
