@@ -22,7 +22,7 @@ SUB COMMANDS:
 
 ## CONFIG
 
-The project manager config file is, by default, located at `~/.config/proj/projects.json`. This stores both the project manager configuration options and the project data.
+The project manager config file is, by default, located at `~/.config/pm/`. There are two files in this directory: `config.json`, which stores the project manager config settings, and `projects.json`, which is the "db" of projects.
 
 ### Customization
 

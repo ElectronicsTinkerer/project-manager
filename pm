@@ -6,9 +6,9 @@ import os
 import subprocess
 import re
 
-CUR_PM_VERS = 1
+CUR_PM_VERS = 2
 
-def pm_add(conf_path, db, args):
+def pm_add(db_path, db, args):
 
    name = args[0]
    path = args[1]
@@ -20,20 +20,20 @@ def pm_add(conf_path, db, args):
       projects[name] = {"path": path}
       
       try:
-         with open(conf_path, "w") as fp:
+         with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
          print("Added project")
       except FileNotFoundError:
          print("WARN: Unable to save projects db")
          
 
-def pm_ls(conf_path, db, args):
+def pm_ls(db_path, db, args):
    projects = db.get('projects')
    for k,v in projects.items():
       print(f"{k}:{(20-len(k))*' '} -> {v['path']}")
 
 
-def pm_rm(conf_path, db, args):
+def pm_rm(db_path, db, args):
    
    name = args[0]
    projects = db.get('projects')
@@ -42,7 +42,7 @@ def pm_rm(conf_path, db, args):
       projects.pop(name)
       
       try:
-         with open(conf_path, "w") as fp:
+         with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
          print("Removed project")
       except FileNotFoundError:
@@ -52,7 +52,7 @@ def pm_rm(conf_path, db, args):
       print("Project not in db")
 
 
-def pm_chdir(conf_path, db, args):
+def pm_chdir(db_path, db, args):
    
    name = args[0]
    path = args[1]
@@ -62,7 +62,7 @@ def pm_chdir(conf_path, db, args):
       projects[name]["path"] = path
       
       try:
-         with open(conf_path, "w") as fp:
+         with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
          print("Updated project")
       except FileNotFoundError:
@@ -72,7 +72,7 @@ def pm_chdir(conf_path, db, args):
       print("Project not in db")
          
 
-def pm_rename(conf_path, db, args):
+def pm_rename(db_path, db, args):
       
    old_name = args[0]
    new_name = args[1]
@@ -84,7 +84,7 @@ def pm_rename(conf_path, db, args):
       projects[new_name] = proj_data
       
       try:
-         with open(conf_path, "w") as fp:
+         with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
          print("Renamed project")
       except FileNotFoundError:
@@ -93,7 +93,7 @@ def pm_rename(conf_path, db, args):
    else:
       print("Project not in db")
 
-def pm_help(conf_path, db, args):
+def pm_help(db_path, db, args):
 
    print("Ray's Project Manager 2022 v1.0")
    print("USAGE:")
@@ -150,25 +150,47 @@ if __name__ == "__main__":
       print("ERROR: $HOME not set")
       exit(-1)
 
-   conf_path = f"{home}/.config/proj/projects.json"
-      
+   conf_path = f"{home}/.config/pm/config.json"
+   db_path = f"{home}/.config/pm/projects.json"
+
+   conf = {}
    db = {}
+   # Load the config
    try:
       with open(conf_path, "r") as fp:
+         conf = json.load(fp)
+      print("INFO: loaded config")
+   except FileNotFoundError:
+      print("WARN: Unable to find config")
+      conf = {'pm_ver': CUR_PM_VERS, 'term': []}
+      try:
+         with open(conf_path, "w") as fp:
+            json.dump(conf, fp, sort_keys=True)
+         print("Created new config")
+      except FileNotFoundError:
+         print("WARN: Unable to save config")
+   except json.decoder.JSONDecodeError:
+      print("ERROR: Malformed config, exiting")
+      print(f"DEBUG: config location: '{conf_path}'")
+      exit(-1)
+
+   # Load the projects "db"
+   try:
+      with open(db_path, "r") as fp:
          db = json.load(fp)
       print("INFO: loaded projects db")
    except FileNotFoundError:
       print("WARN: Unable to find projects db")
-      db = {'pm_ver': CUR_PM_VERS, 'term': [], 'projects': {}}
+      db = {'projects': {}}
       try:
-         with open(conf_path, "w") as fp:
+         with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
          print("Created new projects db")
       except FileNotFoundError:
          print("WARN: Unable to save projects db")
    except json.decoder.JSONDecodeError:
       print("ERROR: Malformed projects db, exiting")
-      print(f"DEBUG: db location: '{conf_path}'")
+      print(f"DEBUG: db location: '{db_path}'")
       exit(-1)
       
    if db.get('projects') == None:
@@ -176,7 +198,7 @@ if __name__ == "__main__":
       print(projects)
       db['projects'] = {}
 
-   if CUR_PM_VERS != db.get('pm_ver'):
+   if CUR_PM_VERS != conf.get('pm_ver'):
       print("WARN: Using project config from older PM version")
          
    if argv[0] in SUBCMDS:
@@ -185,11 +207,11 @@ if __name__ == "__main__":
       if subcmd["argc"] != len(subargs):
          print(f"ERROR: Sub command exprected {subcmd['argc']} args but got {len(subargs)}")
       else:
-         subcmd["func"](conf_path, db, argv[1:])
+         subcmd["func"](db_path, db, argv[1:])
       exit(0)
          
    else:
-      term = db.get('term')
+      term = conf.get('term')
       projects = db.get('projects')
       if argv[0] in projects.keys():
          p = projects.get(argv[0])
