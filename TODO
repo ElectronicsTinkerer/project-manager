@@ -2,6 +2,7 @@
 
 * Figure out tab completion of projects
 * Add config options to turn on/off debug, info, warning, error messages
+* Add sub command to edit and view (set/get) [existing] config parameters
 
 # TO-DOne
 
