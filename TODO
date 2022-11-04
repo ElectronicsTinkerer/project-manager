@@ -10,4 +10,5 @@
 * Add help menu
 * Add config option to specify terminal emulator
 * Move project db to separate file from config; add db location to config
+* Add config options to turn on/off debug, info, warning, error messages
 

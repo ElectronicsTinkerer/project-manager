@@ -6,34 +6,45 @@ import os
 import subprocess
 import re
 
-CUR_PM_VERS = 2
+CUR_PM_VERS = 3
 
-def pm_add(db_path, db, args):
+DEBUG = -1
+INFO = 0
+WARN = 1
+ERROR = 2
+MSG_LEVELS = [
+   "DEBUG",
+   "INFO",
+   "WARN",
+   "ERROR"
+]
+
+def pm_add(db_path, db, conf, args):
 
    name = args[0]
    path = args[1]
    projects = db.get('projects')
       
    if name in projects:
-      print("Project already exists")
+      return msg("Project already exists", WARN, conf)
    else:
       projects[name] = {"path": path}
       
       try:
          with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
-         print("Added project")
+         return msg("Added project", INFO, conf)
       except FileNotFoundError:
-         print("WARN: Unable to save projects db")
+         return msg("Unable to save projects db", ERROR, conf)
          
 
-def pm_ls(db_path, db, args):
+def pm_ls(db_path, db, conf, args):
    projects = db.get('projects')
    for k,v in projects.items():
       print(f"{k}:{(20-len(k))*' '} -> {v['path']}")
 
 
-def pm_rm(db_path, db, args):
+def pm_rm(db_path, db, conf, args):
    
    name = args[0]
    projects = db.get('projects')
@@ -44,15 +55,15 @@ def pm_rm(db_path, db, args):
       try:
          with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
-         print("Removed project")
+         return msg("Removed project", INFO, conf)
       except FileNotFoundError:
-         print("WARN: Unable to save projects db")
+         return msg("Unable to save projects db", ERROR, conf)
          
    else:
-      print("Project not in db")
+      return msg("Project not in db", WARN, conf)
 
 
-def pm_chdir(db_path, db, args):
+def pm_chdir(db_path, db, conf, args):
    
    name = args[0]
    path = args[1]
@@ -64,15 +75,15 @@ def pm_chdir(db_path, db, args):
       try:
          with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
-         print("Updated project")
+         return msg("Updated project", INFO, conf)
       except FileNotFoundError:
-         print("WARN: Unable to save projects db")
+         return msg("Unable to save projects db", ERROR, conf)
          
    else:
-      print("Project not in db")
+      return msg("Project not in db", WARN, conf)
          
 
-def pm_rename(db_path, db, args):
+def pm_rename(db_path, db, conf, args):
       
    old_name = args[0]
    new_name = args[1]
@@ -86,14 +97,14 @@ def pm_rename(db_path, db, args):
       try:
          with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
-         print("Renamed project")
+         return msg("Renamed project", INFO, conf)
       except FileNotFoundError:
-         print("WARN: Unable to save projects db")
+         return msg("Unable to save projects db", ERROR, conf)
             
    else:
-      print("Project not in db")
+      return msg("Project not in db", WARN, conf)
 
-def pm_help(db_path, db, args):
+def pm_help(db_path, db, conf, args):
 
    print("Ray's Project Manager 2022 v1.0")
    print("USAGE:")
@@ -102,7 +113,21 @@ def pm_help(db_path, db, args):
    print("SUB COMMANDS:")
    for v in SUBCMDS.values():
       print(f"  {v['desc']}")
+
+   return 0
       
+
+def msg(s, lvl, conf):
+   
+   if lvl > ERROR:
+      lvl = ERROR
+      
+   # Assuming that the msg_level value is an int...
+   if (not conf) or (not conf.get("msg_level")) or (lvl >= conf["msg_level"]):
+      print(f"{MSG_LEVELS[lvl+1]}: {s}")
+      
+   return lvl
+
 
 SUBCMDS = {
    "add": {
@@ -142,13 +167,13 @@ if __name__ == "__main__":
    argv = sys.argv[1:]
 
    if len(argv) == 0:
-      print("Expected sub command or project")
-      exit(1)
+      msg("Expected sub command or project", ERROR, None)
+      exit(ERROR)
 
    home = os.environ.get('HOME')
    if not home:
-      print("ERROR: $HOME not set")
-      exit(-1)
+      msg("$HOME not set", ERROR, None)
+      exit(ERROR)
 
    conf_path = f"{home}/.config/pm/config.json"
    db_path = f"{home}/.config/pm/projects.json"
@@ -159,56 +184,58 @@ if __name__ == "__main__":
    try:
       with open(conf_path, "r") as fp:
          conf = json.load(fp)
-      print("INFO: loaded config")
+      msg("loaded config", INFO, conf)
    except FileNotFoundError:
-      print("WARN: Unable to find config")
-      conf = {'pm_ver': CUR_PM_VERS, 'term': []}
+      msg("Unable to find config", WARN, None)
+      conf = {'pm_ver': CUR_PM_VERS, 'term': [], 'msg_level': INFO}
       try:
          with open(conf_path, "w") as fp:
             json.dump(conf, fp, sort_keys=True)
-         print("Created new config")
+         msg("Created new config", INFO, conf)
       except FileNotFoundError:
-         print("WARN: Unable to save config")
+         msg("Unable to save config", WARN, conf)
    except json.decoder.JSONDecodeError:
-      print("ERROR: Malformed config, exiting")
-      print(f"DEBUG: config location: '{conf_path}'")
-      exit(-1)
+      msg("Malformed config, exiting", ERROR, None)
+      msg(f"config location: '{conf_path}'", DEBUG, None)
+      exit(ERROR)
 
    # Load the projects "db"
    try:
       with open(db_path, "r") as fp:
          db = json.load(fp)
-      print("INFO: loaded projects db")
+      msg("loaded projects db", INFO, conf)
    except FileNotFoundError:
-      print("WARN: Unable to find projects db")
+      msg("Unable to find projects db", WARN, conf)
       db = {'projects': {}}
       try:
          with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
-         print("Created new projects db")
+         msg("Created new projects db", INFO, conf)
       except FileNotFoundError:
-         print("WARN: Unable to save projects db")
+         msg("WARN: Unable to save projects db", ERROR, conf)
+         exit(ERROR)
    except json.decoder.JSONDecodeError:
-      print("ERROR: Malformed projects db, exiting")
-      print(f"DEBUG: db location: '{db_path}'")
-      exit(-1)
+      msg("Malformed projects db, exiting", ERROR, conf)
+      msg(f"db location: '{db_path}'", DEBUG, conf)
+      exit(ERROR)
       
    if db.get('projects') == None:
-      print("WARN: projects dict missing")
-      print(projects)
+      msg("projects dict missing", WARN, conf)
       db['projects'] = {}
 
    if CUR_PM_VERS != conf.get('pm_ver'):
-      print("WARN: Using project config from older PM version")
+      msg("Using project config from older PM version", WARN, conf)
          
    if argv[0] in SUBCMDS:
       subargs = argv[1:]
       subcmd = SUBCMDS[argv[0]]
+      status = 0
       if subcmd["argc"] != len(subargs):
-         print(f"ERROR: Sub command exprected {subcmd['argc']} args but got {len(subargs)}")
+         msg(f"Sub command exprected {subcmd['argc']} args but got {len(subargs)}", ERROR, conf)
+         status = ERROR
       else:
-         subcmd["func"](db_path, db, argv[1:])
-      exit(0)
+         status = subcmd["func"](db_path, db, conf, argv[1:])
+      exit(status)
          
    else:
       term = conf.get('term')
@@ -218,7 +245,8 @@ if __name__ == "__main__":
          name = argv[0]
          path = p.get('path')
          if not term:
-            print("ERROR: terminal setting missing from config")
+            msg("ERROR: terminal setting missing from config", ERROR, conf)
+            exit(ERROR)
          else:
             print(f"Opening '{name}' @ '{path}'")
             subproc = []
@@ -234,17 +262,15 @@ if __name__ == "__main__":
                try:
                   subprocess.call(subproc, shell=False)
                except FileNotFoundError:
-                  print("ERROR: unable to start terminal - command not found")
+                  msg("Unable to start terminal - command not found", ERROR, conf)
+                  exit(ERROR)
             else:
-               print("ERROR: Missing value for terminal in config")
+               msg("Missing value for terminal in config", ERROR, conf)
+               exit(ERROR)
 
       else:
-         print("Unable to find project")
+         msg("Unable to find project", ERROR, conf)
+         exit(ERROR)
 
       exit(0)
-         
-
-
-
-
    
