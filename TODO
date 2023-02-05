@@ -1,8 +1,8 @@
 # Project Manager TODO
 
 * Figure out tab completion of projects
-* Add config options to turn on/off debug, info, warning, error messages
 * Add sub command to edit and view (set/get) [existing] config parameters
+* Add config to run certain commands in new shell
 
 # TO-DOne
 
