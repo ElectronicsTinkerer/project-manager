@@ -260,7 +260,8 @@ if __name__ == "__main__":
 
             if len(subproc) > 0:
                try:
-                  subprocess.call(subproc, shell=False)
+                  child = subprocess.Popen(subproc, shell=False)
+                  child.detach()
                except FileNotFoundError:
                   msg("Unable to start terminal - command not found", ERROR, conf)
                   exit(ERROR)

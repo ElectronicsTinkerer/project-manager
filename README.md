@@ -41,6 +41,16 @@ Currently, the terminal which is launched can be set by the user. To do this, th
 ]
 ```
 
+#### Example: Konsole
+
+```
+"term":[
+    "/usr/bin/konsole",
+    "--workdir", "TWD",
+    "--new-tab"
+]
+```
+
 #### Example: Windows Terminal
 
 ```
