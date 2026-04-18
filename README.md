@@ -1,6 +1,6 @@
 # Project Manager
 
-A simple python-based CLI tool for keeping track of where you put all those projects.
+A simple python-based CLI tool for rapidly navigating multiple project directories.
 
 ## USAGE
 
@@ -18,7 +18,6 @@ SUB COMMANDS:
   rename <old-name> <new-name> .. Rename a project
   help .......................... Display this menu
 ```
-
 
 ## CONFIG
 
@@ -62,5 +61,13 @@ Currently, the terminal which is launched can be set by the user. To do this, th
     "wsl"
 ]
 ```
+
+## CHANGELOG
+
+**NEW! in v1.1 (2026-04-18)**
+
+The `<path>` argument for projects can now also be used to run commands. If the path starts with `#!` (a *[shebang](https://en.wikipedia.org/wiki/Shebang_(Unix))*), then the string loaded as the path will be executed as a command in a shell. Otherwise, the previous behavior of opening a terminal at the specified `<path>` is followed. There is no change to the config or db format version in this update.
+
+An example might be to launch your project tracking spreadsheet: `pm add stat '#!/usr/bin/libreoffice -o /my/amazing/spreadsheet.ods'`
 
 

@@ -108,7 +108,7 @@ def pm_rename(db_path, db, conf, args):
 
 def pm_help(db_path, db, conf, args):
 
-   print("Ray's Project Manager 2022 v1.0")
+   print("Ray's Project Manager 2026 v1.1")
    print("USAGE:")
    print("$ pm <sub-command|project-name> [args]")
    print()
@@ -242,36 +242,55 @@ if __name__ == "__main__":
 
    # If the argument is not a sub-command, it might be a project
    else:
-      term = conf.get('term')
       projects = db.get('projects')
       if argv[0] in projects.keys():
          p = projects.get(argv[0])
          name = argv[0]
          path = p.get('path')
-         if not term:
-            msg("ERROR: terminal setting missing from config", ERROR, conf)
-            exit(ERROR)
-         else:
-            print(f"Opening '{name}' @ '{path}'")
-            subproc = []
-            for t in term:
-               if t == "TNAME":
-                  subproc.append(name)
-               elif t == "TWD":
-                  subproc.append(path)
-               else:
-                  subproc.append(t)
-
-            if len(subproc) > 0:
-               try:
-                  child = subprocess.Popen(subproc, shell=False, start_new_session=True)
-                  # child.detach()
-               except FileNotFoundError:
-                  msg("Unable to start terminal - command not found", ERROR, conf)
-                  exit(ERROR)
-            else:
-               msg("Missing value for terminal in config", ERROR, conf)
+         # Commands to run start with the typical "shebang"
+         # otherwise, it's just a project path to chdir to.
+         is_command = path.startswith("#!")
+         if is_command:
+            command = path[2:].strip()
+            if len(command) == 0:
+               msg(f"No command set for project 'name'", ERROR, conf)
                exit(ERROR)
+            else:
+               status = 0
+               try:
+                  msg(f"Running command '{command}'", INFO, conf)
+                  subprocess.run(command, shell=True, check=True)
+               except subprocess.CalledProcessError as e:
+                  msg(f"Command returned non-zero exit status: '{e.returncode}'", ERROR, conf)
+                  status = e.returncode
+               finally:
+                  exit(status)
+         else:
+            term = conf.get('term')
+            if not term:
+               msg("Terminal setting missing from config", ERROR, conf)
+               exit(ERROR)
+            else:
+               msg(f"Opening '{name}' @ '{path}'", INFO, conf)
+               subproc = []
+               for t in term:
+                  if t == "TNAME":
+                     subproc.append(name)
+                  elif t == "TWD":
+                     subproc.append(path)
+                  else:
+                     subproc.append(t)
+
+               if len(subproc) > 0:
+                  try:
+                     child = subprocess.Popen(subproc, shell=False, start_new_session=True)
+                     # child.detach()
+                  except FileNotFoundError:
+                     msg("Unable to start terminal - command not found", ERROR, conf)
+                     exit(ERROR)
+               else:
+                  msg("Missing value for terminal in config", ERROR, conf)
+                  exit(ERROR)
 
       else:
          msg("Unable to find project", ERROR, conf)
