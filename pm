@@ -6,6 +6,7 @@ import os
 import subprocess
 import re
 
+# Config version
 CUR_PM_VERS = 3
 
 DEBUG = -1
@@ -26,14 +27,14 @@ def pm_add(db_path, db, conf, args):
    projects = db.get('projects')
       
    if name in projects:
-      return msg("Project already exists", WARN, conf)
+      return msg(f"Project '{name}' already exists", WARN, conf)
    else:
       projects[name] = {"path": path}
       
       try:
          with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
-         return msg("Added project", INFO, conf)
+         return msg(f"Added project '{name}'", INFO, conf)
       except FileNotFoundError:
          return msg("Unable to save projects db", ERROR, conf)
          
@@ -55,12 +56,12 @@ def pm_rm(db_path, db, conf, args):
       try:
          with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
-         return msg("Removed project", INFO, conf)
+         return msg(f"Removed project '{name}'", INFO, conf)
       except FileNotFoundError:
          return msg("Unable to save projects db", ERROR, conf)
          
    else:
-      return msg("Project not in db", WARN, conf)
+      return msg(f"Project '{name}' not in db", WARN, conf)
 
 
 def pm_chdir(db_path, db, conf, args):
@@ -75,12 +76,12 @@ def pm_chdir(db_path, db, conf, args):
       try:
          with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
-         return msg("Updated project", INFO, conf)
+         return msg(f"Updated project '{name}'", INFO, conf)
       except FileNotFoundError:
          return msg("Unable to save projects db", ERROR, conf)
          
    else:
-      return msg("Project not in db", WARN, conf)
+      return msg(f"Project '{name}' not in db", WARN, conf)
          
 
 def pm_rename(db_path, db, conf, args):
@@ -97,12 +98,13 @@ def pm_rename(db_path, db, conf, args):
       try:
          with open(db_path, "w") as fp:
             json.dump(db, fp, sort_keys=True)
-         return msg("Renamed project", INFO, conf)
+         return msg(f"Renamed project '{old_name}' -> '{new_name}'", INFO, conf)
       except FileNotFoundError:
          return msg("Unable to save projects db", ERROR, conf)
             
    else:
-      return msg("Project not in db", WARN, conf)
+      return msg(f"Project '{old_name}' not in db", WARN, conf)
+
 
 def pm_help(db_path, db, conf, args):
 
@@ -225,18 +227,20 @@ if __name__ == "__main__":
 
    if CUR_PM_VERS != conf.get('pm_ver'):
       msg("Using project config from older PM version", WARN, conf)
-         
+
+   # Check if this is a sub-command first
    if argv[0] in SUBCMDS:
       subargs = argv[1:]
       subcmd = SUBCMDS[argv[0]]
       status = 0
       if subcmd["argc"] != len(subargs):
-         msg(f"Sub command exprected {subcmd['argc']} args but got {len(subargs)}", ERROR, conf)
+         msg(f"Sub command expected {subcmd['argc']} args but got {len(subargs)}", ERROR, conf)
          status = ERROR
       else:
          status = subcmd["func"](db_path, db, conf, argv[1:])
       exit(status)
-         
+
+   # If the argument is not a sub-command, it might be a project
    else:
       term = conf.get('term')
       projects = db.get('projects')
