@@ -9,6 +9,9 @@ import re
 # Config version
 CUR_PM_VERS = 3
 
+# Script version for user information
+VERSION_INFO = "2026 v1.2"
+
 DEBUG = -1
 INFO = 0
 WARN = 1
@@ -108,7 +111,8 @@ def pm_rename(db_path, db, conf, args):
 
 def pm_help(db_path, db, conf, args):
 
-   print("Ray's Project Manager 2026 v1.1")
+   print(f"Ray's Project Manager {VERSION_INFO}")
+   print(f"Latest config version: {CUR_PM_VERS}")
    print("USAGE:")
    print("$ pm <sub-command|project-name> [args]")
    print()
@@ -274,12 +278,9 @@ if __name__ == "__main__":
                msg(f"Opening '{name}' @ '{path}'", INFO, conf)
                subproc = []
                for t in term:
-                  if t == "TNAME":
-                     subproc.append(name)
-                  elif t == "TWD":
-                     subproc.append(path)
-                  else:
-                     subproc.append(t)
+                     subproc.append(t
+                                    .replace("TNAME", name)
+                                    .replace("TWD", path))
 
                if len(subproc) > 0:
                   try:
