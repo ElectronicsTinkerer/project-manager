@@ -10,7 +10,7 @@ import re
 CUR_PM_VERS = 3
 
 # Script version for user information
-VERSION_INFO = "2026 v1.2"
+VERSION_INFO = "2026 v1.2.1"
 
 DEBUG = -1
 INFO = 0
@@ -22,6 +22,9 @@ MSG_LEVELS = [
    "WARN",
    "ERROR"
 ]
+
+# String prefix in the project name path to indicate a command
+COMMAND_MARKER = "#!"
 
 def pm_add(db_path, db, conf, args):
 
@@ -43,9 +46,38 @@ def pm_add(db_path, db, conf, args):
          
 
 def pm_ls(db_path, db, conf, args):
-   projects = db.get('projects')
-   for k,v in projects.items():
-      print(f"{k}:{(20-len(k))*' '} -> {v['path']}")
+   projects_dict = db.get('projects')
+   # Separate out projects and commands while also finding the max project
+   # name length.
+   commands = []
+   projects = []
+   max_length = 0
+   for k in projects_dict:
+      path = projects_dict[k]['path']
+      if len(k) > max_length:
+         max_length = len(k)
+      if path.startswith(COMMAND_MARKER):
+         commands.append(k)
+      else:
+         projects.append(k)
+
+   # Max length limiter (20 is arbitrary)
+   if max_length > 20:
+      max_length = 20
+
+   if len(projects) > 0:
+      print()
+      print("**PROJECTS**")
+      for k in projects:
+         v = projects_dict[k]
+         print(f"{k}:{(max_length-len(k))*' '} -> {v['path']}")
+
+   if len(commands) > 0:
+      print()
+      print("**COMMANDS**")
+      for k in commands:
+         v = projects_dict[k]
+         print(f"{k}:{(max_length-len(k))*' '} -> {v['path']}")
 
 
 def pm_rm(db_path, db, conf, args):
@@ -253,7 +285,7 @@ if __name__ == "__main__":
          path = p.get('path')
          # Commands to run start with the typical "shebang"
          # otherwise, it's just a project path to chdir to.
-         is_command = path.startswith("#!")
+         is_command = path.startswith(COMMAND_MARKER)
          if is_command:
             command = path[2:].strip()
             if len(command) == 0:

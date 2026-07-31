@@ -2,7 +2,6 @@
 
 * Figure out tab completion of projects
 * Add sub command to edit and view (set/get) [existing] config parameters
-* Add config to run certain commands in new shell
 
 # TO-DOne
 
@@ -11,4 +10,6 @@
 * Add config option to specify terminal emulator
 * Move project db to separate file from config; add db location to config
 * Add config options to turn on/off debug, info, warning, error messages
+* Add config to run certain commands in new shell
+
 
